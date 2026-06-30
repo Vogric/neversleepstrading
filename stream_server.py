@@ -180,9 +180,10 @@ class Handler(BaseHTTPRequestHandler):
             self._send("not found", "text/plain", 404)
 
     def do_GET(self):
-        if self.path in ("/", "/live", "/live.html"):
+        path = self.path.split("?", 1)[0]
+        if path in ("/", "/live", "/live.html"):
             self._serve_file("live_scene.html", "text/html; charset=utf-8")
-        elif self.path == "/api/overview":
+        elif path == "/api/overview":
             try:
                 self._send(json.dumps(build_overview()))
             except Exception as e:

@@ -53,6 +53,9 @@
   .stage.win .rbot{animation-duration:1.2s}
   .stage.win .rsensor,.stage.win .rcore,.stage.win .rant{fill:var(--mint)!important}
 
+  body.lite *{animation:none!important}
+  body.lite .livedot,body.lite .udot{opacity:1!important}
+
   .top{display:flex;align-items:center;justify-content:space-between;
     padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line)}
   .brand{display:flex;align-items:center;gap:16px}
@@ -271,6 +274,7 @@
 </div>
 
 <script>
+if (new URLSearchParams(location.search).has('lite')) document.body.classList.add('lite');
 const fmtPct = (n,d=1)=> (n>=0?'+':'')+Number(n).toFixed(d)+'%';
 const nf = (n)=> Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
 

@@ -3,8 +3,8 @@ set -euo pipefail
 
 : "${YOUTUBE_STREAM_KEY:?YOUTUBE_STREAM_KEY is required}"
 
-SCENE_URL="${SCENE_URL:-http://127.0.0.1:8765/live}"
-W=1920; H=1080; FPS="${FPS:-15}"
+SCENE_URL="${SCENE_URL:-http://127.0.0.1:8765/live?lite=1}"
+W=1920; H=1080; FPS="${FPS:-12}"
 GOP=$((FPS * 2))
 DISPLAY_NUM=99
 RTMP="rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}"
