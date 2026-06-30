@@ -258,7 +258,7 @@
 
   <div class="counters">
     <div class="counter">
-      <div class="cl">Days : Hrs : Min : Sec</div>
+      <div class="cl">Running for · Days : Hrs : Min</div>
       <div class="cv mono" id="uptimeCounter">—</div>
     </div>
     <div class="counter right">
@@ -363,9 +363,9 @@ function tickUptime(){
   let s = Math.max(0, Math.floor((Date.now() - botStartMs)/1000));
   const d = Math.floor(s/86400); s -= d*86400;
   const h = Math.floor(s/3600); s -= h*3600;
-  const m = Math.floor(s/60); s -= m*60;
+  const m = Math.floor(s/60);
   const p = (n)=> String(n).padStart(2,'0');
-  el.textContent = `${p(d)}:${p(h)}:${p(m)}:${p(s)}`;
+  el.textContent = `${p(d)}:${p(h)}:${p(m)}`;
 }
 
 function render(ov){
