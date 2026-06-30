@@ -4,7 +4,7 @@ set -euo pipefail
 : "${YOUTUBE_STREAM_KEY:?YOUTUBE_STREAM_KEY is required}"
 
 SCENE_URL="${SCENE_URL:-http://127.0.0.1:8765/live}"
-W=1920; H=1080; FPS="${FPS:-2}"
+W=1920; H=1080; FPS="${FPS:-24}"
 GOP=$((FPS * 2))
 DISPLAY_NUM=99
 RTMP="rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}"
@@ -38,8 +38,8 @@ trap cleanup EXIT
 ffmpeg -hide_banner -loglevel warning \
   -f x11grab -draw_mouse 0 -video_size "${W}x${H}" -framerate "${FPS}" -i ":${DISPLAY_NUM}.0" \
   -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 \
-  -c:v libx264 -preset veryfast -tune stillimage -pix_fmt yuv420p \
-  -b:v 2500k -maxrate 2500k -bufsize 5000k -g "${GOP}" -keyint_min "${GOP}" \
+  -c:v libx264 -preset veryfast -pix_fmt yuv420p \
+  -b:v 6000k -maxrate 6800k -bufsize 12000k -g "${GOP}" -keyint_min "${GOP}" \
   -c:a aac -b:a 128k -ar 44100 \
   -t "${DURATION}" \
   -f flv "${RTMP}"
