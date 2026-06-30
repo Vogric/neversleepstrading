@@ -61,9 +61,16 @@ REGEN_PID=$!
 cleanup() { kill "$REGEN_PID" 2>/dev/null || true; }
 trap cleanup EXIT INT TERM
 
+FIRST=1
 while [ $(( $(date +%s) - START )) -lt "$DURATION" ]; do
+  if [ "$FIRST" = "1" ]; then
+    SEG=360
+    FIRST=0
+  else
+    SEG="$REFRESH"
+  fi
   ffmpeg -hide_banner -loglevel warning \
     -re -stream_loop -1 -i "$CLIP" \
-    -c copy -t "$REFRESH" \
+    -c copy -t "$SEG" \
     -f flv "$RTMP" || true
 done
