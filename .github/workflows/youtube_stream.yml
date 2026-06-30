@@ -3,11 +3,7 @@ name: YouTube Live Stream
 on:
   workflow_dispatch:
   schedule:
-    - cron: "5 */6 * * *"
-
-concurrency:
-  group: youtube-stream
-  cancel-in-progress: false
+    - cron: "0 */5 * * *"
 
 permissions:
   actions: write
@@ -15,7 +11,7 @@ permissions:
 jobs:
   stream:
     runs-on: ubuntu-latest
-    timeout-minutes: 355
+    timeout-minutes: 350
 
     steps:
       - name: Checkout
@@ -49,13 +45,19 @@ jobs:
           done
           curl -sf http://127.0.0.1:8765/live > /dev/null || (cat server.log; exit 1)
 
-      - name: Stream to YouTube
+      - name: Stream with overlap relay
         env:
           YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
-        run: bash stream_scene.sh
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DURATION: "19500"
+        run: |
+          ( sleep 19200 && gh workflow run youtube_stream.yml || true ) &
+          RELAY_PID=$!
+          bash stream_scene.sh
+          kill "$RELAY_PID" 2>/dev/null || true
 
-      - name: Re-trigger
-        if: always()
+      - name: Fallback relay on early failure
+        if: failure()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh workflow run youtube_stream.yml || true
