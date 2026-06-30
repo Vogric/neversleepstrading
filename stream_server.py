@@ -19,7 +19,15 @@ BACKTEST = {
 }
 
 
+_GIST_CACHE = {"ts": 0, "data": {}}
+_CACHE_TTL = 300
+
+
 def read_gist(gist_id):
+    import time
+    now = time.time()
+    if _GIST_CACHE["data"] and now - _GIST_CACHE["ts"] < _CACHE_TTL:
+        return _GIST_CACHE["data"]
     try:
         req = urllib.request.Request(
             f"https://api.github.com/gists/{gist_id}",
@@ -27,9 +35,12 @@ def read_gist(gist_id):
         )
         with urllib.request.urlopen(req, timeout=15) as resp:
             d = json.loads(resp.read())
-        return {fn: f.get("content", "") for fn, f in (d.get("files") or {}).items()}
+        data = {fn: f.get("content", "") for fn, f in (d.get("files") or {}).items()}
+        _GIST_CACHE["ts"] = now
+        _GIST_CACHE["data"] = data
+        return data
     except Exception:
-        return {}
+        return _GIST_CACHE["data"]
 
 
 def parse_trades(csv_content, eth_only=True):
