@@ -422,17 +422,17 @@ function render(ov){
     sp.innerHTML = html;
   }
 
-  const mr = ret.monthly_pct || 0, mrPos = mr >= 0;
+  const tp = ret.total_pct || 0, tpPos = tp >= 0;
   const ovL = document.getElementById('ovLeft');
   if(ovL) ovL.innerHTML = `
-    <div class="hl-label">Return · this month</div>
-    <div class="hl-num ${mrPos?'':'neg'}">${fmtPct(mr,1)}</div>
-    <div class="hl-sub">Fully automated bot trading real money on Ethereum, 24/7, without stopping.</div>`;
+    <div class="hl-label">Real return · live account</div>
+    <div class="hl-num ${tpPos?'':'neg'}">${fmtPct(tp,2)}</div>
+    <div class="hl-sub">Actual result on a real-money account · fully automated bot on Ethereum, 24/7.</div>`;
 
   const ovR = document.getElementById('ovRight');
   if(ovR) ovR.innerHTML = `
     <div class="ov-metric"><div class="omk">Winning trades</div><div class="omv ${s.wr>=50?'mint':'amber'}">${Math.round(s.wr)}%</div></div>
-    <div class="ov-metric"><div class="omk">This week</div><div class="omv ${ret.weekly_pct>=0?'mint':'red'}">${fmtPct(ret.weekly_pct||0,1)}</div></div>
+    <div class="ov-metric"><div class="omk">Total trades</div><div class="omv">${s.trades}</div></div>
     <div class="ov-metric"><div class="omk">Win vs loss</div><div class="omv ${s.pf>=1.3?'mint':'amber'}">${Number(s.pf).toFixed(2)}×</div></div>`;
 
   const now = new Date();
