@@ -12,15 +12,15 @@ CLIP="/tmp/nst_clip.mp4"
 NEXT="/tmp/nst_next.mp4"
 
 shot() {
-  python3 - "$SCENE_URL" "$W" "$H" "$1" <<'PYEOF' 2>/dev/null
+  timeout 40 python3 - "$SCENE_URL" "$W" "$H" "$1" <<'PYEOF' 2>/dev/null
 import sys
 from playwright.sync_api import sync_playwright
 url, w, h, out = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4]
 with sync_playwright() as p:
     b = p.chromium.launch(args=["--no-sandbox", "--disable-gpu", "--force-device-scale-factor=1"])
     pg = b.new_page(viewport={"width": w, "height": h})
-    pg.goto(url, wait_until="networkidle")
-    pg.wait_for_timeout(4500)
+    pg.goto(url, wait_until="domcontentloaded")
+    pg.wait_for_timeout(5000)
     pg.screenshot(path=out, type="png")
     b.close()
 PYEOF
@@ -35,7 +35,7 @@ build_clip() {
     musicargs=(-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100)
   fi
   local cliplen=$(( REFRESH + 30 ))
-  ffmpeg -hide_banner -loglevel error -y \
+  timeout 60 ffmpeg -hide_banner -loglevel error -y \
     -loop 1 -framerate 10 -t "$cliplen" -i "$img" \
     "${musicargs[@]}" \
     -c:v libx264 -preset veryfast -tune stillimage -pix_fmt yuv420p -r 10 \
