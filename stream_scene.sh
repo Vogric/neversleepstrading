@@ -7,7 +7,7 @@ SCENE_URL="${SCENE_URL:-http://127.0.0.1:8765/live?lite=1}"
 W=1280; H=720
 RTMP="rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}"
 DURATION="${DURATION:-19500}"
-REFRESH="${REFRESH:-480}"
+REFRESH="${REFRESH:-60}"
 CLIP="/tmp/nst_clip.mp4"
 NEXT="/tmp/nst_next.mp4"
 
@@ -34,12 +34,13 @@ build_clip() {
   else
     musicargs=(-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100)
   fi
+  local cliplen=$(( REFRESH + 30 ))
   ffmpeg -hide_banner -loglevel error -y \
-    -loop 1 -framerate 10 -t "$REFRESH" -i "$img" \
+    -loop 1 -framerate 10 -t "$cliplen" -i "$img" \
     "${musicargs[@]}" \
     -c:v libx264 -preset veryfast -tune stillimage -pix_fmt yuv420p -r 10 \
     -b:v 2500k -maxrate 2500k -bufsize 5000k -g 20 -keyint_min 20 \
-    -c:a aac -b:a 128k -ar 44100 -shortest -t "$REFRESH" \
+    -c:a aac -b:a 128k -ar 44100 -shortest -t "$cliplen" \
     "$out"
 }
 
