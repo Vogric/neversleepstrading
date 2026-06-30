@@ -20,7 +20,17 @@ BACKTEST = {
 
 
 _GIST_CACHE = {"ts": 0, "data": {}}
-_CACHE_TTL = 300
+_CACHE_TTL = 120
+
+
+def _fetch_api(gist_id):
+    req = urllib.request.Request(
+        f"https://api.github.com/gists/{gist_id}",
+        headers={"User-Agent": "live-scene", "Accept": "application/vnd.github+json"},
+    )
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        d = json.loads(resp.read())
+    return {fn: f.get("content", "") for fn, f in (d.get("files") or {}).items()}
 
 
 def read_gist(gist_id):
@@ -28,19 +38,16 @@ def read_gist(gist_id):
     now = time.time()
     if _GIST_CACHE["data"] and now - _GIST_CACHE["ts"] < _CACHE_TTL:
         return _GIST_CACHE["data"]
-    try:
-        req = urllib.request.Request(
-            f"https://api.github.com/gists/{gist_id}",
-            headers={"User-Agent": "live-scene", "Accept": "application/vnd.github+json"},
-        )
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            d = json.loads(resp.read())
-        data = {fn: f.get("content", "") for fn, f in (d.get("files") or {}).items()}
-        _GIST_CACHE["ts"] = now
-        _GIST_CACHE["data"] = data
-        return data
-    except Exception:
-        return _GIST_CACHE["data"]
+    for attempt in range(3):
+        try:
+            data = _fetch_api(gist_id)
+            if data:
+                _GIST_CACHE["ts"] = now
+                _GIST_CACHE["data"] = data
+                return data
+        except Exception:
+            time.sleep(2 * (attempt + 1))
+    return _GIST_CACHE["data"]
 
 
 def parse_trades(csv_content, eth_only=True):
@@ -185,5 +192,6 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
+    read_gist(STATE_GIST)
     print(f"Live scene on http://127.0.0.1:{PORT}/live")
     ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()
