@@ -9,9 +9,6 @@ RTMP="rtmp://a.rtmp.youtube.com/live2/${YOUTUBE_STREAM_KEY}"
 DURATION="${DURATION:-19500}"
 SHOT_EVERY="${SHOT_EVERY:-12}"
 
-CHROME_BIN="$(command -v chromium-browser || command -v chromium || command -v google-chrome || true)"
-[ -n "$CHROME_BIN" ] || { echo "::error::Chromium/Chrome not found"; exit 1; }
-
 PLAYLIST="/tmp/playlist.txt"
 : > "$PLAYLIST"
 if ls music/*.mp3 >/dev/null 2>&1; then
