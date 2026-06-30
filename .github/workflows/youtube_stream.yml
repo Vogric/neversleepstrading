@@ -51,6 +51,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DURATION: "19500"
         run: |
+          (
+            sleep 45
+            for id in $(gh run list --workflow youtube_stream.yml --status in_progress --json databaseId --jq "[.[] | select(.databaseId != ${{ github.run_id }})] | .[].databaseId" 2>/dev/null); do
+              gh run cancel "$id" || true
+            done
+          ) &
           ( sleep 19200 && gh workflow run youtube_stream.yml || true ) &
           RELAY_PID=$!
           bash stream_scene.sh
