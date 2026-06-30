@@ -1,0 +1,32 @@
+name: Stream Watchdog
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "20 * * * *"
+
+permissions:
+  actions: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check stream and revive if down
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TG_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TG_CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          ACTIVE=$(gh run list --workflow youtube_stream.yml --status in_progress --json databaseId --jq 'length')
+          if [ "${ACTIVE:-0}" -ge 1 ]; then
+            echo "Stream is live ($ACTIVE run(s)). OK."
+            exit 0
+          fi
+          echo "Stream is DOWN. Reviving…"
+          gh workflow run youtube_stream.yml || true
+          if [ -n "${TG_TOKEN:-}" ] && [ -n "${TG_CHAT:-}" ]; then
+            curl -s -X POST "https://api.telegram.org/bot${TG_TOKEN}/sendMessage" \
+              -d chat_id="${TG_CHAT}" \
+              -d text="⚠️ NeverSleepsTrading stream was down — watchdog restarted it." > /dev/null || true
+          fi
