@@ -50,14 +50,13 @@ else
 fi
 
 ffmpeg -hide_banner -loglevel warning \
-  -use_wallclock_as_timestamps 1 \
   -f x11grab -draw_mouse 0 -video_size "${W}x${H}" -framerate "${FPS}" -i ":${DISPLAY_NUM}.0" \
   "${AUDIO_IN[@]}" \
-  -c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -threads 0 \
-  -b:v 4500k -maxrate 4500k -bufsize 9000k -g "${GOP}" -keyint_min "${GOP}" \
-  -vsync cfr -r "${FPS}" \
-  -c:a aac -b:a 128k -ar 44100 -async 1 \
+  -vf "scale=1280:720" \
+  -c:v libx264 -preset veryfast -pix_fmt yuv420p \
+  -b:v 3000k -maxrate 3000k -bufsize 6000k -g "${GOP}" -keyint_min "${GOP}" \
+  -c:a aac -b:a 128k -ar 44100 \
   -map 0:v:0 -map 1:a:0 \
-  -max_muxing_queue_size 1024 -flush_packets 1 \
+  -max_muxing_queue_size 1024 \
   -t "${DURATION}" \
   -f flv "${RTMP}"
