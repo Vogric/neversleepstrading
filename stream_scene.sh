@@ -54,7 +54,7 @@ ffmpeg -hide_banner -loglevel warning \
   "${AUDIO_IN[@]}" \
   -vf "scale=1280:720" \
   -c:v libx264 -preset veryfast -pix_fmt yuv420p \
-  -b:v 3000k -maxrate 3000k -bufsize 6000k -g "${GOP}" -keyint_min "${GOP}" \
+  -b:v 3500k -minrate 3500k -maxrate 3500k -bufsize 7000k -g "${GOP}" -keyint_min "${GOP}" \
   -c:a aac -b:a 128k -ar 44100 \
   -map 0:v:0 -map 1:a:0 \
   -max_muxing_queue_size 1024 \
