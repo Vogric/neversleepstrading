@@ -1,0 +1,61 @@
+name: YouTube Live Stream
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "5 */6 * * *"
+
+concurrency:
+  group: youtube-stream
+  cancel-in-progress: false
+
+permissions:
+  actions: write
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg xvfb chromium-browser fonts-liberation
+
+      - name: Check stream key
+        env:
+          YT_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+        run: |
+          if [ -z "$YT_KEY" ]; then
+            echo "::error::Missing secret YOUTUBE_STREAM_KEY."
+            exit 1
+          fi
+
+      - name: Start scene server
+        run: |
+          python3 stream_server.py > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8765/api/overview > /dev/null; then break; fi
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8765/live > /dev/null || (cat server.log; exit 1)
+
+      - name: Stream to YouTube
+        env:
+          YOUTUBE_STREAM_KEY: ${{ secrets.YOUTUBE_STREAM_KEY }}
+        run: bash stream_scene.sh
+
+      - name: Re-trigger
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run youtube_stream.yml || true

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>NeverSleepsTrading · LIVE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#05070b; --bg2:#080b11;
+    --surface:#0b0f16; --surface2:#0e131c; --line:#1a212e; --line2:#222b3a;
+    --text:#e9eef6; --text2:#aab6c6; --muted:#5f6c7e; --faint:#3a4555;
+    --mint:#19e39a; --mint-d:#0fae76; --cyan:#3fd6ff; --red:#ff4d6d; --amber:#ffb43d;
+    --glow-mint:rgba(25,227,154,.55); --glow-cyan:rgba(63,214,255,.4); --glow-red:rgba(255,77,109,.45);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:1920px;height:1080px;overflow:hidden;background:var(--bg);
+    font-family:"Inter",-apple-system,sans-serif;color:var(--text);
+    -webkit-font-smoothing:antialiased;font-feature-settings:"cv01","cv03","ss01"}
+  .mono{font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+
+  body::before{content:"";position:fixed;inset:0;z-index:0;
+    background:
+      radial-gradient(1400px 900px at 18% -10%, rgba(25,227,154,.07), transparent 55%),
+      radial-gradient(1200px 800px at 100% 0%, rgba(63,214,255,.05), transparent 50%),
+      radial-gradient(1000px 1000px at 50% 130%, rgba(0,0,0,.6), transparent 60%);}
+  body::after{content:"";position:fixed;inset:0;z-index:0;opacity:.5;
+    background-image:linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px);
+    background-size:48px 48px;
+    mask-image:radial-gradient(ellipse 90% 80% at 50% 40%,#000 30%,transparent 100%);}
+  .scene{position:relative;z-index:1;width:1920px;height:1080px;padding:32px 52px;display:flex;flex-direction:column}
+
+  @keyframes rFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+  @keyframes rScan{0%,100%{opacity:.8}50%{opacity:1}}
+  @keyframes rCore{0%,100%{opacity:.5}50%{opacity:.95}}
+  @keyframes rTypeL{0%,100%{transform:translateY(0)}50%{transform:translateY(2px)}}
+  @keyframes rTypeR{0%,100%{transform:translateY(2px)}50%{transform:translateY(0)}}
+  @keyframes rCandle{0%,100%{transform:scaleY(.85)}50%{transform:scaleY(1.05)}}
+  @keyframes rBlink{0%,90%,100%{opacity:1}95%{opacity:.25}}
+  .rbot{animation:rFloat 5s ease-in-out infinite}
+  .rsensor{fill:var(--mint);animation:rScan 3s ease-in-out infinite}
+  .rant{fill:var(--cyan);animation:rScan 3s ease-in-out infinite}
+  .rcore{fill:var(--mint);animation:rCore 2.4s ease-in-out infinite}
+  .rarmL{transform-origin:78px 196px;animation:rTypeL 1.2s ease-in-out infinite}
+  .rarmR{transform-origin:182px 196px;animation:rTypeR 1.2s ease-in-out infinite}
+  .rc{transform-origin:bottom;animation:rCandle 2s ease-in-out infinite}
+  .rblink{animation:rBlink 1.4s infinite}
+  
+  .stage.trade .rsensor,.stage.trade .rcore{fill:var(--amber)!important}
+  .stage.trade .rarmL,.stage.trade .rarmR{animation-duration:.7s}
+  .stage.win .rbot{animation-duration:1.2s}
+  .stage.win .rsensor,.stage.win .rcore,.stage.win .rant{fill:var(--mint)!important}
+
+  .top{display:flex;align-items:center;justify-content:space-between;
+    padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--line)}
+  .brand{display:flex;align-items:center;gap:16px}
+  .logo{width:60px;height:60px;border-radius:14px;position:relative;
+    background:linear-gradient(150deg,#0f1722,#0a0e15);border:1px solid var(--line2);
+    display:flex;align-items:center;justify-content:center;font-size:28px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px rgba(25,227,154,.08),0 8px 24px rgba(0,0,0,.5)}
+  .logo::after{content:"";position:absolute;inset:-1px;border-radius:14px;padding:1px;
+    background:linear-gradient(160deg,rgba(25,227,154,.5),transparent 45%);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+  .brand h1{font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1}
+  .brand .sub{font-size:13px;color:var(--muted);margin-top:4px;letter-spacing:.4px;font-weight:500;
+    text-transform:uppercase}
+  .brand .sub b{color:var(--text2)}
+  .head-right{display:flex;align-items:center;gap:22px}
+  .clock{text-align:right;padding-right:22px;border-right:1px solid var(--line)}
+  .clock .ct{font-size:26px;font-weight:600;letter-spacing:0}
+  .clock .cd{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:2.5px;font-weight:600}
+  .livebadge{display:flex;align-items:center;gap:10px;
+    background:rgba(255,77,109,.1);border:1px solid rgba(255,77,109,.4);border-radius:8px;padding:9px 16px;
+    box-shadow:0 0 24px rgba(255,77,109,.18)}
+  .livedot{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 10px var(--red);animation:pulse 1.4s infinite}
+  .livebadge span{font-size:15px;font-weight:800;letter-spacing:3px;color:#ff7088}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .hero{position:relative;overflow:hidden;flex-shrink:0;border-radius:18px;margin-bottom:16px;
+    background:linear-gradient(110deg,#091410 0%,#070d14 55%,#060a10 100%);
+    border:1px solid var(--line2);padding:18px 36px;display:flex;align-items:center;justify-content:space-between;
+    box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 20px 50px rgba(0,0,0,.5)}
+  .hero::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;
+    background:linear-gradient(180deg,var(--mint),var(--cyan));box-shadow:0 0 30px var(--glow-mint)}
+  .hero::after{content:"";position:absolute;top:-60%;left:-5%;width:50%;height:220%;
+    background:radial-gradient(closest-side,var(--glow-mint),transparent);opacity:.35;pointer-events:none}
+  .hero-left{position:relative;z-index:1}
+  .hl-label{font-size:13px;font-weight:700;letter-spacing:3px;color:var(--mint);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:9px}
+  .hl-label::before{content:"";width:22px;height:1px;background:var(--mint);opacity:.6}
+  .hl-num{font-size:88px;font-weight:800;letter-spacing:-4px;line-height:.88;font-family:"Inter";
+    background:linear-gradient(180deg,#eafff6 0%,#19e39a 130%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 40px var(--glow-mint))}
+  .hl-num.neg{background:linear-gradient(180deg,#ffe6eb,#ff4d6d 130%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 40px var(--glow-red))}
+  .hl-sub{font-size:15px;color:var(--text2);margin-top:12px;letter-spacing:.2px;max-width:320px;line-height:1.5}
+  
+  .hero-right{position:relative;z-index:1;display:flex;flex-direction:column;gap:10px;margin-top:20px}
+  .hr{text-align:left;padding:10px 18px 10px 16px;border-radius:10px;background:rgba(7,11,17,.5);
+    border:1px solid var(--line);position:relative;display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .hr::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:2px;border-radius:2px;background:var(--line2)}
+  .hr.up::before{background:var(--mint)}.hr.dn::before{background:var(--red)}
+  .hr .hk{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+  .hr .hv{font-size:24px;font-weight:800;letter-spacing:-1px}
+
+  .stage{position:absolute;inset:0;overflow:hidden}
+  .stage-bg{position:absolute;inset:0;
+    background:radial-gradient(110% 80% at 50% 30%,#1a212c 0%,#0c1018 55%,#05070b 100%)}
+  .stage-bg::before{content:"";position:absolute;inset:0;opacity:.45;
+    background-image:linear-gradient(rgba(120,140,170,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(120,140,170,.04) 1px,transparent 1px);
+    background-size:60px 60px;mask-image:radial-gradient(ellipse 70% 65% at 50% 42%,#000 28%,transparent 100%)}
+  
+  .stage-bg::after{content:"";position:absolute;top:30%;left:12%;width:60px;height:130px;border-radius:30px;
+    background:rgba(58,71,90,.10);box-shadow:62em 0 rgba(58,71,90,.10),-2px 0 0 rgba(58,71,90,0)}
+
+  .ov-top{position:absolute;top:42px;left:56px;right:56px;display:flex;align-items:flex-start;justify-content:space-between;z-index:3}
+  .brand h1{font-size:34px;font-weight:800;letter-spacing:-.5px}
+  .brand .sub{font-size:14px;color:var(--muted);margin-top:5px;letter-spacing:.4px;text-transform:uppercase;font-weight:500}
+  .head-right{display:flex;align-items:center;gap:22px}
+  .clock{text-align:right;padding-right:22px;border-right:1px solid var(--line)}
+  .clock .ct{font-size:26px;font-weight:600}
+  .clock .cd{font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:2.5px;font-weight:600}
+
+  .stage-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  #robotMount{width:640px;max-width:46vw;filter:drop-shadow(0 30px 60px rgba(0,0,0,.6))}
+
+  .ov-left{position:absolute;left:56px;top:50%;transform:translateY(-50%);z-index:3;max-width:380px}
+  .ov-right{position:absolute;right:56px;top:50%;transform:translateY(-50%);z-index:3;text-align:right;display:flex;flex-direction:column;gap:18px}
+
+  .ov-status{position:absolute;left:0;right:0;bottom:170px;text-align:center;z-index:3}
+
+  .counters{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-end;
+    padding:34px 56px;background:linear-gradient(0deg,rgba(5,6,10,.92),rgba(5,6,10,.45) 55%,transparent);z-index:3}
+  .counter .cl{font-size:15px;color:var(--muted);letter-spacing:4px;font-weight:600;margin-bottom:8px;text-transform:uppercase}
+  .counter .cv{font-size:76px;font-weight:800;color:#fff;letter-spacing:2px;line-height:1}
+  .counter.right{text-align:right}
+  .cs-pill{display:inline-flex;align-items:center;gap:11px;padding:13px 26px;border-radius:30px;
+    font-size:19px;font-weight:700;letter-spacing:1.5px;border:1px solid;background:rgba(7,11,17,.7);backdrop-filter:blur(8px)}
+  
+  .last-trade{display:block;margin-top:14px;font-size:17px;color:var(--text2);font-weight:500}
+  
+  .trade-panel{display:inline-block;padding:18px 30px;border-radius:18px;border:1px solid;
+    background:rgba(7,11,17,.75);backdrop-filter:blur(10px);box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  .tp-head{display:flex;align-items:center;justify-content:center;gap:11px;font-size:22px;font-weight:800;letter-spacing:1px;margin-bottom:14px}
+  .tp-pnl{font-size:24px;font-weight:800;font-family:"IBM Plex Mono",monospace;margin-left:6px}
+  .tp-levels{display:flex;gap:34px;justify-content:center}
+  .tp-lv{display:flex;flex-direction:column;gap:5px;align-items:center}
+  .tp-lv .tpk{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+  .tp-lv .tpv{font-size:26px;font-weight:700}
+
+  .ov-left .hl-label{font-size:13px;font-weight:700;letter-spacing:3px;color:var(--mint);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:9px}
+  .ov-left .hl-label::before{content:"";width:22px;height:1px;background:var(--mint);opacity:.6}
+  .ov-left .hl-num{font-size:96px;font-weight:800;letter-spacing:-4px;line-height:.85;font-family:"Inter";
+    background:linear-gradient(180deg,#eafff6 0%,#19e39a 130%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 0 40px var(--glow-mint))}
+  .ov-left .hl-num.neg{background:linear-gradient(180deg,#ffe6eb,#ff4d6d 130%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 40px var(--glow-red))}
+  .ov-left .hl-sub{font-size:15px;color:var(--text2);margin-top:14px;line-height:1.5}
+  
+  .ov-metric{text-align:right}
+  .ov-metric .omk{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;font-weight:600;margin-bottom:6px}
+  .ov-metric .omv{font-size:44px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+
+  .grid{flex-shrink:0;height:188px;display:grid;grid-template-columns:1fr;gap:18px;overflow:hidden}
+  .panel{position:relative;background:linear-gradient(180deg,var(--surface),var(--bg2));
+    border:1px solid var(--line);border-radius:16px;padding:16px 24px;
+    box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 14px 40px rgba(0,0,0,.4)}
+  .label{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:2.5px;
+    margin-bottom:20px;display:flex;align-items:center;gap:9px}
+  .label .dot{width:6px;height:6px;border-radius:2px;background:var(--mint);box-shadow:0 0 8px var(--mint)}
+
+  .status-big{grid-column:1;grid-row:1}
+  .status-row{display:flex;align-items:center;gap:20px}
+  .status-icon{font-size:48px;filter:drop-shadow(0 0 18px currentColor)}
+  .status-text .st{font-size:40px;font-weight:800;line-height:1.05;letter-spacing:-1.2px;display:flex;align-items:baseline;gap:14px}
+  .status-text .sd{font-size:17px;color:var(--text2);margin-top:8px}
+  .status-text .sd b{color:var(--text)}
+  .pnl-live{font-size:30px;font-weight:700}
+  
+  .ladder{margin-top:28px}
+  .ladder-track{position:relative;height:14px;border-radius:8px;display:flex;
+    border:1px solid var(--line2);background:#06090e;box-shadow:inset 0 2px 6px rgba(0,0,0,.6)}
+  .lz-loss{width:50%;background:linear-gradient(90deg,rgba(255,77,109,.55),rgba(255,77,109,.12));border-radius:8px 0 0 8px}
+  .lz-win{width:50%;background:linear-gradient(90deg,rgba(25,227,154,.12),rgba(25,227,154,.55));border-radius:0 8px 8px 0}
+  .ladder-marker{position:absolute;top:-7px;width:4px;height:28px;background:#fff;border-radius:3px;
+    box-shadow:0 0 0 4px var(--bg),0 0 18px #fff;transition:left 1s cubic-bezier(.4,0,.2,1)}
+  .ladder-labels{display:flex;justify-content:space-between;margin-top:14px}
+  .ll{font-size:16px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .ll small{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+
+  .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .metric{background:rgba(14,19,28,.7);border:1px solid var(--line);border-radius:14px;padding:14px 18px;position:relative;overflow:hidden}
+  .metric::after{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent)}
+  .metric .mk{font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase;font-weight:600}
+  .metric .mv{font-size:32px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+
+  .track{grid-column:1;grid-row:2}
+  .track.wide{grid-column:1 / -1;grid-row:2}
+  .hero-num{font-size:76px;font-weight:800;letter-spacing:-3px;line-height:1;
+    background:linear-gradient(180deg,#eafff6,#19e39a);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 4px 22px var(--glow-mint))}
+  .hero-cap{font-size:17px;color:var(--text2);margin-top:8px;max-width:540px}
+  .track-stats{display:flex;gap:0;margin-top:24px}
+  .track-stats .ts{padding:0 30px;border-left:1px solid var(--line)}
+  .track-stats .ts:first-child{padding-left:0;border-left:none}
+  .track-stats .ts .tk{font-size:12px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+  .track-stats .ts .tv{font-size:30px;font-weight:800;letter-spacing:-1px}
+
+  .recent{display:flex;flex-direction:column}
+  .trade-list{flex:1;display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:2px}
+  .trade{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px solid var(--line);
+    border-radius:12px;background:rgba(14,19,28,.6)}
+  .tbadge{font-size:13px;font-weight:800;padding:5px 11px;border-radius:7px;text-align:center;letter-spacing:.5px;align-self:flex-start}
+  .bwin{background:rgba(25,227,154,.12);color:var(--mint);border:1px solid rgba(25,227,154,.28)}
+  .bloss{background:rgba(255,77,109,.1);color:#ff7088;border:1px solid rgba(255,77,109,.25)}
+  .trow{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+  .tdir{font-weight:700;font-size:13px;letter-spacing:1px;text-transform:uppercase}
+  .tdir.s{color:var(--red)}.tdir.l{color:var(--mint)}
+  .px{color:var(--muted);font-size:13px;letter-spacing:.3px}
+  .tpct{font-weight:800;font-size:22px;letter-spacing:-.5px}
+
+  .mint{color:var(--mint)}.red{color:var(--red)}.amber{color:var(--amber)}.cyan{color:var(--cyan)}
+
+  .footer{margin-top:18px;display:flex;align-items:center;justify-content:space-between;
+    color:var(--muted);padding-top:16px;border-top:1px solid var(--line)}
+  .footer .disc{font-size:13px;opacity:.7;max-width:64%;letter-spacing:.2px}
+  .updated{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:600;color:var(--text2);
+    padding:8px 15px;border-radius:8px;background:var(--surface);border:1px solid var(--line)}
+  .updated .udot{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 10px var(--mint);animation:pulse 2s infinite}
+  .updated b{color:var(--text)}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="stage-bg"></div>
+
+  <div class="ov-top">
+    <div class="brand">
+      <h1>NeverSleeps<span style="color:var(--mint)">Trading</span></h1>
+      <div class="sub">The bot that never sleeps · Ethereum · 100% automated</div>
+    </div>
+    <div class="head-right">
+      <div class="clock"><div class="ct mono" id="clockTime">—</div><div class="cd" id="clockDate">—</div></div>
+      <div class="livebadge"><span class="livedot"></span><span>LIVE</span></div>
+    </div>
+  </div>
+
+  <div class="stage-center"><div id="robotMount"></div></div>
+
+  <div class="ov-left" id="ovLeft"></div>
+  <div class="ov-right" id="ovRight"></div>
+
+  <div class="ov-status" id="stageStatus"></div>
+
+  <div class="counters">
+    <div class="counter">
+      <div class="cl">Days : Hrs : Min : Sec</div>
+      <div class="cv mono" id="uptimeCounter">—</div>
+    </div>
+    <div class="counter right">
+      <div class="cl">Trades executed</div>
+      <div class="cv mono mint" id="tradesCounter">—</div>
+    </div>
+  </div>
+
+  <div style="display:none" id="heroBlock"></div>
+  <div style="display:none" id="metricsBlock"></div>
+  <div style="display:none" id="tradesBlock"></div>
+  <span style="display:none" id="updated"></span>
+</div>
+
+<script>
+const fmtPct = (n,d=1)=> (n>=0?'+':'')+Number(n).toFixed(d)+'%';
+const nf = (n)=> Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
+
+let ethPrice = null;
+async function fetchEthPrice(){
+  try{
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=ETHUSDT',{cache:'no-store'});
+    const j = await r.json();
+    if(j && j.price) ethPrice = parseFloat(j.price);
+  }catch(e){}
+}
+
+async function load(){
+  try{
+    await fetchEthPrice();
+    const r = await fetch('/api/overview',{cache:'no-store'});
+    render(await r.json());
+  }catch(e){
+    document.getElementById('updated').textContent = 'reconnecting…';
+  }
+}
+
+function robotSVG(){
+  return `
+  <svg viewBox="0 0 340 320" style="width:100%;overflow:visible">
+    <defs>
+      <linearGradient id="RsW" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#e9edf2"/><stop offset="55%" stop-color="#c2c9d3"/><stop offset="100%" stop-color="#959dab"/></linearGradient>
+      <linearGradient id="RsG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#333a47"/><stop offset="100%" stop-color="#1c2129"/></linearGradient>
+      <linearGradient id="RfB" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#15171c"/><stop offset="100%" stop-color="#05060a"/></linearGradient>
+      <linearGradient id="Rscreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0c1822"/><stop offset="100%" stop-color="#061018"/></linearGradient>
+    </defs>
+    <g class="rbot">
+      <rect x="120" y="232" width="80" height="22" rx="10" fill="url(#RsG)"/>
+      <path d="M126 150 q-8 0 -8 12 l4 70 q1 14 16 14 l44 0 q15 0 16 -14 l4 -70 q0 -12 -8 -12 z" fill="url(#RsW)" stroke="#7a8492" stroke-width="1.2"/>
+      <line x1="160" y1="158" x2="160" y2="228" stroke="#8a93a2" stroke-width="1.3"/>
+      <rect x="146" y="178" width="28" height="20" rx="6" fill="#15181f"/>
+      <circle cx="160" cy="188" r="5.5" class="rcore"/>
+      <circle cx="120" cy="156" r="14" fill="url(#RsG)"/>
+      <circle cx="200" cy="156" r="14" fill="url(#RsG)"/>
+      <g class="rarmL">
+        <rect x="100" y="150" width="17" height="40" rx="8" fill="url(#RsW)" stroke="#7a8492" stroke-width="1"/>
+        <rect x="104" y="184" width="14" height="34" rx="7" fill="url(#RsG)" transform="rotate(28 111 184)"/>
+        <circle cx="128" cy="214" r="8" fill="url(#RsW)" stroke="#7a8492" stroke-width="1"/>
+      </g>
+      <g class="rarmR">
+        <rect x="203" y="150" width="17" height="40" rx="8" fill="url(#RsW)" stroke="#7a8492" stroke-width="1"/>
+        <rect x="202" y="184" width="14" height="34" rx="7" fill="url(#RsG)" transform="rotate(-28 209 184)"/>
+        <circle cx="192" cy="214" r="8" fill="url(#RsW)" stroke="#7a8492" stroke-width="1"/>
+      </g>
+      <rect x="150" y="122" width="20" height="18" rx="5" fill="url(#RsG)"/>
+      <path d="M130 80 q0 -20 30 -20 q30 0 30 20 l0 26 q0 16 -16 16 l-28 0 q-16 0 -16 -16 z" fill="url(#RsW)" stroke="#7a8492" stroke-width="1.2"/>
+      <path d="M137 84 q0 -12 23 -12 q23 0 23 12 l0 20 q0 10 -12 10 l-22 0 q-12 0 -12 -10 z" fill="url(#RfB)"/>
+      <rect x="146" y="92" width="28" height="3.5" rx="2" class="rsensor"/>
+      <rect x="126" y="86" width="6" height="16" rx="3" fill="url(#RsG)"/>
+      <rect x="188" y="86" width="6" height="16" rx="3" fill="url(#RsG)"/>
+      <line x1="160" y1="60" x2="160" y2="48" stroke="#3a4150" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="160" cy="45" r="3.5" class="rant"/>
+    </g>
+    <rect x="36" y="252" width="268" height="8" rx="2" fill="#161b22"/>
+    <g transform="translate(108,150)">
+      <rect x="0" y="0" width="104" height="74" rx="6" fill="#11161d" stroke="#252e3a" stroke-width="2"/>
+      <rect x="6" y="6" width="92" height="62" rx="3" fill="url(#Rscreen)"/>
+      <g transform="translate(10,12)">
+        <line x1="0" y1="17" x2="84" y2="17" stroke="#1a232d" stroke-width=".5"/>
+        <line x1="0" y1="34" x2="84" y2="34" stroke="#1a232d" stroke-width=".5"/>
+        <g class="rc"><line x1="8" y1="20" x2="8" y2="44" stroke="#19e39a" stroke-width="1"/><rect x="5.5" y="26" width="5" height="14" fill="#19e39a"/></g>
+        <g class="rc" style="animation-delay:.2s"><line x1="20" y1="14" x2="20" y2="38" stroke="#ff4d6d" stroke-width="1"/><rect x="17.5" y="20" width="5" height="14" fill="#ff4d6d"/></g>
+        <g class="rc" style="animation-delay:.4s"><line x1="32" y1="18" x2="32" y2="46" stroke="#19e39a" stroke-width="1"/><rect x="29.5" y="24" width="5" height="18" fill="#19e39a"/></g>
+        <g class="rc" style="animation-delay:.1s"><line x1="44" y1="10" x2="44" y2="34" stroke="#19e39a" stroke-width="1"/><rect x="41.5" y="14" width="5" height="16" fill="#19e39a"/></g>
+        <g class="rc" style="animation-delay:.5s"><line x1="56" y1="16" x2="56" y2="42" stroke="#ff4d6d" stroke-width="1"/><rect x="53.5" y="22" width="5" height="14" fill="#ff4d6d"/></g>
+        <g class="rc" style="animation-delay:.3s"><line x1="68" y1="8" x2="68" y2="32" stroke="#19e39a" stroke-width="1"/><rect x="65.5" y="12" width="5" height="16" fill="#19e39a"/></g>
+        <g class="rc" style="animation-delay:.6s"><line x1="80" y1="14" x2="80" y2="40" stroke="#19e39a" stroke-width="1"/><rect x="77.5" y="18" width="5" height="18" fill="#19e39a"/></g>
+      </g>
+      <circle cx="92" cy="12" r="2.5" fill="#ff4d6d" class="rblink"/>
+    </g>
+    <path d="M96 224 l128 0 8 28 -144 0 z" fill="url(#RsG)" stroke="#252e3a" stroke-width="1.5"/>
+    <rect x="104" y="230" width="112" height="14" rx="2" fill="#0e1219"/>
+    <g fill="#252d38"><rect x="108" y="233" width="100" height="2" rx="1"/><rect x="110" y="237" width="96" height="2" rx="1"/></g>
+  </svg>`;
+}
+
+let botStartMs = null;
+function tickUptime(){
+  const el = document.getElementById('uptimeCounter');
+  if(!el || !botStartMs) return;
+  let s = Math.max(0, Math.floor((Date.now() - botStartMs)/1000));
+  const d = Math.floor(s/86400); s -= d*86400;
+  const h = Math.floor(s/3600); s -= h*3600;
+  const m = Math.floor(s/60); s -= m*60;
+  const p = (n)=> String(n).padStart(2,'0');
+  el.textContent = `${p(d)}:${p(h)}:${p(m)}:${p(s)}`;
+}
+
+function render(ov){
+  const b = ov.real, s = b.stats;
+  const ret = b.returns || {monthly_pct:0,total_pct:0,weekly_pct:0};
+  const bt = ov.backtest_hist || {};
+
+  const mount = document.getElementById('robotMount');
+  if(mount && !mount.dataset.mounted){ mount.innerHTML = robotSVG(); mount.dataset.mounted = '1'; }
+  if(b.bot_start){ const t = Date.parse(b.bot_start); if(!isNaN(t)){ botStartMs = t; tickUptime(); } }
+  const tc = document.getElementById('tradesCounter'); if(tc) tc.textContent = s.trades;
+  const stage = document.querySelector('.stage');
+  const sp = document.getElementById('stageStatus');
+  if(stage && sp){
+    let cls = '', col = 'var(--cyan)', html = '';
+    if(b.position){
+      const p = b.position, isLong = p.side === 'long';
+      const e = Number(p.entry), sl = Number(p.sl), tp = Number(p.tp);
+      cls = 'trade'; col = 'var(--amber)';
+      let pnlStr = '';
+      if(ethPrice){
+        const pp = (isLong ? (ethPrice-e)/e : (e-ethPrice)/e)*100;
+        pnlStr = `<span class="tp-pnl" style="color:${pp>=0?'var(--mint)':'var(--red)'}">${fmtPct(pp,2)}</span>`;
+        if(pp>=0){ cls='win'; col='var(--mint)'; }
+      }
+      html = `
+        <div class="trade-panel" style="border-color:${col}">
+          <div class="tp-head" style="color:${col}">
+            <span style="width:10px;height:10px;border-radius:50%;background:${col};box-shadow:0 0 10px ${col}"></span>
+            ${isLong?'▲ LONG':'▼ SHORT'} · ETH ${pnlStr}
+          </div>
+          <div class="tp-levels">
+            <div class="tp-lv"><span class="tpk">Entry</span><span class="tpv mono">$${nf(e)}</span></div>
+            <div class="tp-lv"><span class="tpk red">Stop loss</span><span class="tpv mono">$${nf(sl)}</span></div>
+            <div class="tp-lv"><span class="tpk mint">Target</span><span class="tpv mono">$${nf(tp)}</span></div>
+          </div>
+        </div>`;
+    } else {
+      cls=''; col='var(--cyan)';
+      const eth = (b.history||[]).filter(t=>t.asset==='ETH');
+      const last = eth[eth.length-1];
+      let lastStr = '';
+      if(last){
+        const win = (last.ret||0) >= 0, isLong = last.side==='long', pct=(last.ret||0)*100;
+        lastStr = `<span class="last-trade">
+          Last trade: <b style="color:${isLong?'var(--mint)':'var(--red)'}">${isLong?'LONG':'SHORT'}</b>
+          @ <span class="mono">$${nf(last.price)}</span> ·
+          <b style="color:${win?'var(--mint)':'var(--red)'}">${win?'WIN':'LOSS'} ${pct>=0?'+':''}${pct.toFixed(2)}%</b></span>`;
+      }
+      html = `
+        <span class="cs-pill" style="color:${col};border-color:${col}">
+          <span style="width:9px;height:9px;border-radius:50%;background:${col};box-shadow:0 0 8px ${col}"></span>
+          ANALYZING THE MARKET
+        </span>
+        ${lastStr}`;
+    }
+    stage.className = 'stage ' + cls;
+    sp.innerHTML = html;
+  }
+
+  const mr = ret.monthly_pct || 0, mrPos = mr >= 0;
+  const ovL = document.getElementById('ovLeft');
+  if(ovL) ovL.innerHTML = `
+    <div class="hl-label">Return · this month</div>
+    <div class="hl-num ${mrPos?'':'neg'}">${fmtPct(mr,1)}</div>
+    <div class="hl-sub">Fully automated bot trading real money on Ethereum, 24/7, without stopping.</div>`;
+
+  const ovR = document.getElementById('ovRight');
+  if(ovR) ovR.innerHTML = `
+    <div class="ov-metric"><div class="omk">Winning trades</div><div class="omv ${s.wr>=50?'mint':'amber'}">${Math.round(s.wr)}%</div></div>
+    <div class="ov-metric"><div class="omk">This week</div><div class="omv ${ret.weekly_pct>=0?'mint':'red'}">${fmtPct(ret.weekly_pct||0,1)}</div></div>
+    <div class="ov-metric"><div class="omk">Win vs loss</div><div class="omv ${s.pf>=1.3?'mint':'amber'}">${Number(s.pf).toFixed(2)}×</div></div>`;
+
+  const now = new Date();
+  document.getElementById('updated').textContent =
+    now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function tickClock(){
+  const d = new Date();
+  document.getElementById('clockTime').textContent =
+    d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('clockDate').textContent =
+    d.toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'});
+}
+tickClock(); setInterval(tickClock,1000);
+setInterval(tickUptime,1000);
+load(); setInterval(load,15000);
+</script>
+</body>
+</html>
