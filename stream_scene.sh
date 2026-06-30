@@ -29,17 +29,32 @@ sleep 3
 CHROME_PID=$!
 sleep 8
 
+PLAYLIST="/tmp/playlist.txt"
+: > "$PLAYLIST"
+if ls music/*.mp3 >/dev/null 2>&1; then
+  for f in $(ls music/*.mp3 | sort -R); do
+    echo "file '$(pwd)/$f'" >> "$PLAYLIST"
+  done
+fi
+
 cleanup() {
   kill "$CHROME_PID" 2>/dev/null || true
   kill "$XVFB_PID" 2>/dev/null || true
 }
 trap cleanup EXIT
 
+if [ -s "$PLAYLIST" ]; then
+  AUDIO_IN=(-f concat -safe 0 -stream_loop -1 -i "$PLAYLIST")
+else
+  AUDIO_IN=(-f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100)
+fi
+
 ffmpeg -hide_banner -loglevel warning \
   -f x11grab -draw_mouse 0 -video_size "${W}x${H}" -framerate "${FPS}" -i ":${DISPLAY_NUM}.0" \
-  -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 \
+  "${AUDIO_IN[@]}" \
   -c:v libx264 -preset veryfast -pix_fmt yuv420p \
   -b:v 6000k -maxrate 6800k -bufsize 12000k -g "${GOP}" -keyint_min "${GOP}" \
   -c:a aac -b:a 128k -ar 44100 \
+  -map 0:v:0 -map 1:a:0 \
   -t "${DURATION}" \
   -f flv "${RTMP}"
